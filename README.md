@@ -212,41 +212,8 @@ Flask web application with:
 
 The landing page features a clean, modern interface with:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  DefectScan                                        🟢 SYSTEM ONLINE
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  🎯 AI-POWERED QC                                                │
-│                                                                   │
-│  Surface Defect Detection                                        │
-│                                                                   │
-│  Upload metal surface images for instant classification —       │
-│  powered by deep learning CNN trained on 1,800 labeled samples. │
-│                                                                   │
-├─────────────────────────────────────────────────────────────────┤
-│  IMAGE ANALYSIS                                  JPG · PNG · BMP │
-│                                                                   │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │                                                            │   │
-│  │              📥 Drop image here                          │   │
-│  │           or click to browse your files                 │   │
-│  │                                                            │   │
-│  │              [.JPG] [.PNG] [.BMP]                        │   │
-│  │                                                            │   │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                   │
-│  DEFECT CLASSIFICATION                                          │
-│  Run an analysis to see classification scores                   │
-│                                                                   │
-├─────────────────────────────────────────────────────────────────┤
-│                        SESSION STATS                             │
-│  Analyzed: 0    Defects: 0    Normal: 0                         │
-│                                                                   │
-│                      ANALYSIS HISTORY                            │
-│  No predictions yet                                              │
-└─────────────────────────────────────────────────────────────────┘
-```
+<img width="1920" height="1921" alt="image" src="https://github.com/user-attachments/assets/e462f760-47fc-4894-bf78-ac187c7dc413" />
+
 
 **Features:**
 - ✅ Drag & drop upload zone with hover feedback
@@ -261,46 +228,8 @@ The landing page features a clean, modern interface with:
 
 After uploading and analyzing an image:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  DefectScan                                        🟢 SYSTEM ONLINE
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  IMAGE ANALYSIS              │    PREDICTION                     │
-│                              │                                    │
-│  ┌────────────────────────┐  │    Classification                │
-│  │ [Metal Surface Image]  │  │    ┌──────────────────┐           │
-│  │                        │  │    │   INCLUSION      │ 🔴 DEFECT  │
-│  │                        │  │    │   Confidence     │           │
-│  │ inclusor_u98_1.jpg     │  │    │   45.1%          │           │
-│  └────────────────────────┘  │    └──────────────────┘           │
-│  [🔍 Analyze Surface] [✕ Clear]    ▓▓▓▓▓▓░░░░░░░░░░            │
-│                              │                                    │
-│  DEFECT CLASSIFICATION       │    SESSION STATS                  │
-│                              │    📊 Analyzed: 1                 │
-│  ┌──────────┬──────────┐     │    🔴 Defects: 1                  │
-│  │ Inclusion│  45.1%   │     │    ✅ Normal: 0                   │
-│  │ ▓▓▓▓▓░   │          │     │                                    │
-│  ├──────────┼──────────┤     │    ANALYSIS HISTORY               │
-│  │ Punching │  23.3%   │     │                                    │
-│  │ ▓▓░░░░   │          │     │    [📷] Inclusion                │
-│  ├──────────┼──────────┤     │        45.1% | 2:15 PM           │
-│  │ Cratering│  20.8%   │     │                                    │
-│  │ ▓▓░░░░   │          │     │                                    │
-│  ├──────────┼──────────┤     │                                    │
-│  │ Normal   │   3.8%   │     │                                    │
-│  │ ░░░░░░   │          │     │                                    │
-│  ├──────────┼──────────┤     │                                    │
-│  │ Pitted   │   3.3%   │     │                                    │
-│  │ ░░░░░░   │          │     │                                    │
-│  ├──────────┼──────────┤     │                                    │
-│  │ Rolled   │   0.1%   │     │                                    │
-│  │ ░░░░░░   │          │     │                                    │
-│  └──────────┴──────────┘     │                                    │
-│  Scratch: 0.1%               │                                    │
-│                              │                                    │
-└─────────────────────────────────────────────────────────────────┘
-```
+<img width="1920" height="2121" alt="image" src="https://github.com/user-attachments/assets/1aef7adc-58c1-4c7f-9e82-7c2b71acab1e" />
+
 
 **Features:**
 - ✅ Image preview on the left with filename
