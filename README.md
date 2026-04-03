@@ -206,6 +206,270 @@ Flask web application with:
 
 ---
 
+## 🎨 UI Screenshots
+
+### **Home Page (Empty State)**
+
+The landing page features a clean, modern interface with:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  DefectScan                                        🟢 SYSTEM ONLINE
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  🎯 AI-POWERED QC                                                │
+│                                                                   │
+│  Surface Defect Detection                                        │
+│                                                                   │
+│  Upload metal surface images for instant classification —       │
+│  powered by deep learning CNN trained on 1,800 labeled samples. │
+│                                                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  IMAGE ANALYSIS                                  JPG · PNG · BMP │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                                                            │   │
+│  │              📥 Drop image here                          │   │
+│  │           or click to browse your files                 │   │
+│  │                                                            │   │
+│  │              [.JPG] [.PNG] [.BMP]                        │   │
+│  │                                                            │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                   │
+│  DEFECT CLASSIFICATION                                          │
+│  Run an analysis to see classification scores                   │
+│                                                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                        SESSION STATS                             │
+│  Analyzed: 0    Defects: 0    Normal: 0                         │
+│                                                                   │
+│                      ANALYSIS HISTORY                            │
+│  No predictions yet                                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Features:**
+- ✅ Drag & drop upload zone with hover feedback
+- ✅ Supported file types clearly labeled
+- ✅ System status indicator (green = online)
+- ✅ Empty state for classification results
+- ✅ Session statistics tracking
+
+---
+
+### **Results Page (After Prediction)**
+
+After uploading and analyzing an image:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  DefectScan                                        🟢 SYSTEM ONLINE
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  IMAGE ANALYSIS              │    PREDICTION                     │
+│                              │                                    │
+│  ┌────────────────────────┐  │    Classification                │
+│  │ [Metal Surface Image]  │  │    ┌──────────────────┐           │
+│  │                        │  │    │   INCLUSION      │ 🔴 DEFECT  │
+│  │                        │  │    │   Confidence     │           │
+│  │ inclusor_u98_1.jpg     │  │    │   45.1%          │           │
+│  └────────────────────────┘  │    └──────────────────┘           │
+│  [🔍 Analyze Surface] [✕ Clear]    ▓▓▓▓▓▓░░░░░░░░░░            │
+│                              │                                    │
+│  DEFECT CLASSIFICATION       │    SESSION STATS                  │
+│                              │    📊 Analyzed: 1                 │
+│  ┌──────────┬──────────┐     │    🔴 Defects: 1                  │
+│  │ Inclusion│  45.1%   │     │    ✅ Normal: 0                   │
+│  │ ▓▓▓▓▓░   │          │     │                                    │
+│  ├──────────┼──────────┤     │    ANALYSIS HISTORY               │
+│  │ Punching │  23.3%   │     │                                    │
+│  │ ▓▓░░░░   │          │     │    [📷] Inclusion                │
+│  ├──────────┼──────────┤     │        45.1% | 2:15 PM           │
+│  │ Cratering│  20.8%   │     │                                    │
+│  │ ▓▓░░░░   │          │     │                                    │
+│  ├──────────┼──────────┤     │                                    │
+│  │ Normal   │   3.8%   │     │                                    │
+│  │ ░░░░░░   │          │     │                                    │
+│  ├──────────┼──────────┤     │                                    │
+│  │ Pitted   │   3.3%   │     │                                    │
+│  │ ░░░░░░   │          │     │                                    │
+│  ├──────────┼──────────┤     │                                    │
+│  │ Rolled   │   0.1%   │     │                                    │
+│  │ ░░░░░░   │          │     │                                    │
+│  └──────────┴──────────┘     │                                    │
+│  Scratch: 0.1%               │                                    │
+│                              │                                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Features:**
+- ✅ Image preview on the left with filename
+- ✅ Defect classification in right panel with confidence bar
+- ✅ DEFECT/NORMAL badge (red or green)
+- ✅ All 6 class probabilities with visual bars
+- ✅ Real-time session statistics
+- ✅ Prediction history with thumbnails
+- ✅ Analyze/Clear action buttons
+
+---
+
+### **Design System**
+
+**Color Palette (Dark Theme):**
+- **Background:** `#0c0d0f` (Deep Black)
+- **Surface:** `#131518` (Dark Gray)
+- **Accent:** `#e8f040` (Electric Yellow)
+- **Danger (Defect):** `#ff5a4a` (Red)
+- **Success (Normal):** `#4ade80` (Green)
+- **Text Primary:** `#e8eaed` (Light Gray)
+
+**Typography:**
+- **Display Font:** Syne (bold, geometric)
+- **Monospace Font:** Space Mono (data, labels)
+
+**Key UI Elements:**
+- **Glass-morphism panels** - Semi-transparent frosted effect
+- **Animated confidence bars** - Smooth fill animations
+- **Drag-drop upload** - Interactive visual feedback
+- **Classification cards** - Individual defect type probability display
+- **Loading animation** - Dual spinning rings with glowing core
+
+---
+
+## 🖥️ Live Demo States
+
+### **State 1: Empty (Initial Load)**
+
+```
+┌────────────────────────────────────────────────────────┐
+│                  🎯 PREDICTION                         │
+│                                                         │
+│         Upload and analyze an image to see results     │
+│                                                         │
+└────────────────────────────────────────────────────────┘
+```
+
+### **State 2: Analyzing (Processing)**
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   SCANNING...                          │
+│                                                         │
+│              ⟳ Dual Ring Animation                     │
+│              ● Glowing Core                           │
+│                                                         │
+│         ✓ Preprocessing image                         │
+│         ⧖ Running CNN inference                       │
+│           Classifying defects                         │
+│                                                         │
+└────────────────────────────────────────────────────────┘
+```
+
+### **State 3: Result (Defect Detected)**
+
+```
+┌────────────────────────────────────────────────────────┐
+│  Classification: INCLUSION                             │
+│                                                         │
+│  Confidence: 45.1%                                     │
+│  ▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░░░  [RED BADGE: DEFECT]      │
+│                                                         │
+│  PROBABILITIES:                                        │
+│  ┌─────────────────────────────────────────┐          │
+│  │ Inclusion:        45.1% ▓▓▓▓▓▓▓░░░░   │          │
+│  │ Punching:         23.3% ▓▓▓░░░░░░░░   │          │
+│  │ Cratering:        20.8% ▓▓▓░░░░░░░░   │          │
+│  │ Normal:           3.8%  ░░░░░░░░░░░░   │          │
+│  │ Pitted Surface:   3.3%  ░░░░░░░░░░░░   │          │
+│  │ Rolled-in Scale:  0.1%  ░░░░░░░░░░░░   │          │
+│  └─────────────────────────────────────────┘          │
+│                                                         │
+│  ⚠️ RECOMMENDATION: REJECT (Quality Control)           │
+│                                                         │
+└────────────────────────────────────────────────────────┘
+```
+
+### **State 4: Result (Normal Surface)**
+
+```
+┌────────────────────────────────────────────────────────┐
+│  Classification: NORMAL                                │
+│                                                         │
+│  Confidence: 92.4%                                     │
+│  ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░  [GREEN BADGE: NORMAL]         │
+│                                                         │
+│  PROBABILITIES:                                        │
+│  ┌─────────────────────────────────────────┐          │
+│  │ Normal:           92.4% ▓▓▓▓▓▓▓▓▓░░░   │          │
+│  │ Pitted Surface:   4.2%  ░░░░░░░░░░░░   │          │
+│  │ Inclusion:        2.1%  ░░░░░░░░░░░░   │          │
+│  │ Scratch:          0.9%  ░░░░░░░░░░░░   │          │
+│  │ Cratering:        0.3%  ░░░░░░░░░░░░   │          │
+│  │ Rolled-in Scale:  0.1%  ░░░░░░░░░░░░   │          │
+│  └─────────────────────────────────────────┘          │
+│                                                         │
+│  ✅ RECOMMENDATION: ACCEPT (Pass Quality Check)       │
+│                                                         │
+└────────────────────────────────────────────────────────┘
+```
+
+### **State 5: Session Statistics**
+
+```
+┌────────────────────────────────────────────────────────┐
+│                  SESSION STATS                         │
+│                                                         │
+│  📊 Analyzed:  15  images processed                   │
+│  🔴 Defects:   3   issues found                       │
+│  ✅ Normal:    12  passed quality control             │
+│                                                         │
+│  Statistics: 20% defect rate, 80% pass rate            │
+│                                                         │
+└────────────────────────────────────────────────────────┘
+```
+
+### **State 6: Analysis History**
+
+```
+┌────────────────────────────────────────────────────────┐
+│              ANALYSIS HISTORY (Last 5)                 │
+│                                                         │
+│  1. [🖼] Scratch      92.1%  2:45 PM                  │
+│  2. [🖼] Inclusion    45.1%  2:42 PM                  │
+│  3. [🖼] Normal       87.3%  2:38 PM                  │
+│  4. [🖼] Cratering    67.2%  2:35 PM                  │
+│  5. [🖼] Normal       94.5%  2:31 PM                  │
+│                                                         │
+│  ← Click to view details or re-analyze               │
+│                                                         │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+### **Design System**
+
+**Color Palette (Dark Theme):**
+- **Background:** `#0c0d0f` (Deep Black)
+- **Surface:** `#131518` (Dark Gray)
+- **Accent:** `#e8f040` (Electric Yellow)
+- **Danger (Defect):** `#ff5a4a` (Red)
+- **Success (Normal):** `#4ade80` (Green)
+- **Text Primary:** `#e8eaed` (Light Gray)
+
+**Typography:**
+- **Display Font:** Syne (bold, geometric)
+- **Monospace Font:** Space Mono (data, labels)
+
+**Key UI Elements:**
+- **Glass-morphism panels** - Semi-transparent frosted effect
+- **Animated confidence bars** - Smooth fill animations
+- **Drag-drop upload** - Interactive visual feedback
+- **Classification cards** - Individual defect type probability display
+- **Loading animation** - Dual spinning rings with glowing core
+
+---
+
 ## 🎨 Web Interface Features
 
 ### Upload Section
@@ -236,7 +500,60 @@ Flask web application with:
 
 ---
 
-## 📈 Performance Metrics
+## � User Workflow
+
+**Step-by-Step Usage:**
+
+1. **Open the Application**
+   ```
+   Navigate to http://localhost:5000
+   ```
+
+2. **Upload Image**
+   - Drag and drop a metal surface image, OR
+   - Click upload zone to browse files
+   - Supported formats: JPG, PNG, BMP
+
+3. **Image Preview**
+   - Uploaded image displays in preview frame
+   - Filename shown with timestamp
+   - "Analyze Surface" button appears
+
+4. **Run Analysis**
+   - Click "Analyze Surface" button
+   - Loading animation shows (3 steps)
+   - CNN model processes image (~50ms)
+
+5. **View Results**
+   - Classification displayed (e.g., "Inclusion")
+   - Confidence as percentage (45.1%)
+   - Color badge indicates status (🔴 DEFECT or ✅ NORMAL)
+   - Animated progress bar shows confidence level
+
+6. **Probability Analysis**
+   - All 6 defect types shown with probabilities
+   - Visual bar length indicates probability
+   - Top match highlighted with accent border
+   - Sorted by highest probability first
+
+7. **Track Statistics**
+   - Session stats update automatically:
+     - Total Analyzed: +1
+     - Defects: +1 (if defect found)
+     - Normal: +1 (if normal)
+
+8. **Review History**
+   - Prediction added to history list
+   - Shows thumbnail, class, confidence, time
+   - Scroll through previous predictions
+
+9. **Next Analysis**
+   - Click "Clear" to reset and upload another image
+   - Or upload directly - replaces previous image
+
+---
+
+## �📈 Performance Metrics
 
 Typical model performance on NEU dataset:
 
