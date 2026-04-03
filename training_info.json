@@ -1,0 +1,15 @@
+{
+    "model_type": "custom",
+    "class_names": [
+        "ANNOTATIONS",
+        "Cratering",
+        "Inclusion",
+        "NEU-DET",
+        "Normal",
+        "Pitted_Surface",
+        "Rolled-in_Scale",
+        "Scratches"
+    ],
+    "training_date": "2026-04-03T22:55:05.955167",
+    "num_classes": 8
+}

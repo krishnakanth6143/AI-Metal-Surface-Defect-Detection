@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DefectScan — Metal Surface Inspection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-base:       #0c0d0f;
+            --bg-surface:    #131518;
+            --bg-panel:      #1a1c20;
+            --bg-raised:     #22252b;
+            --border-subtle: rgba(255,255,255,0.06);
+            --border-dim:    rgba(255,255,255,0.12);
+            --border-accent: rgba(255,255,255,0.22);
+            --text-primary:  #e8eaed;
+            --text-secondary:#8a9099;
+            --text-muted:    #4e545e;
+            --accent:        #e8f040;
+            --accent-dim:    rgba(232,240,64,0.12);
+            --accent-dimmer: rgba(232,240,64,0.06);
+            --danger:        #ff5a4a;
+            --danger-dim:    rgba(255,90,74,0.12);
+            --success:       #4ade80;
+            --success-dim:   rgba(74,222,128,0.12);
+            --info:          #60b4ff;
+            --info-dim:      rgba(96,180,255,0.12);
+            --warn:          #fbbf24;
+            --warn-dim:      rgba(251,191,36,0.12);
+            --font-display:  'Syne', sans-serif;
+            --font-mono:     'Space Mono', monospace;
+            --radius-sm:     6px;
+            --radius-md:     10px;
+            --radius-lg:     16px;
+            --radius-xl:     24px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── NOISE TEXTURE ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            background-size: 200px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── TOPBAR ─── */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 60px;
+            background: rgba(12,13,15,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .topbar-brand .logo-mark {
+            width: 30px; height: 30px;
+            border: 1.5px solid var(--accent);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent);
+            font-size: 13px;
+        }
+        .topbar-brand .brand-name {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: var(--text-primary);
+            text-transform: uppercase;
+        }
+        .topbar-brand .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: block;
+            margin-top: 1px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px;
+            background: var(--success-dim);
+            border: 1px solid rgba(74,222,128,0.2);
+            border-radius: 100px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--success);
+            letter-spacing: 0.05em;
+        }
+        .status-pill .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ─── LAYOUT ─── */
+        .page {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem 4rem;
+        }
+
+        /* ─── HERO ─── */
+        .hero {
+            margin-bottom: 3rem;
+            padding: 3.5rem 3rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 320px; height: 320px;
+            background: radial-gradient(circle, rgba(232,240,64,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero-tag {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            border: 1px solid rgba(232,240,64,0.3);
+            border-radius: 100px;
+            padding: 4px 14px;
+            display: inline-block;
+            margin-bottom: 1.25rem;
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+        .hero h1 span { color: var(--accent); }
+        .hero p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            max-width: 480px;
+        }
+
+        .hero-grid-bg {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to right, transparent, black 30%, black 70%, transparent);
+            pointer-events: none;
+        }
+
+        /* ─── MAIN GRID ─── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 1.5rem;
+        }
+        @media (max-width: 960px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ─── PANEL ─── */
+        .panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        .panel-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            letter-spacing: 0.05em;
+        }
+        .panel-body { padding: 1.5rem; }
+
+        /* ─── UPLOAD ZONE ─── */
+        .upload-zone {
+            border: 1.5px dashed var(--border-dim);
+            border-radius: var(--radius-md);
+            padding: 3.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            position: relative;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-dimmer);
+        }
+        .upload-zone input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer;
+        }
+        .upload-icon {
+            width: 56px; height: 56px;
+            margin: 0 auto 1rem;
+            border: 1.5px solid var(--border-dim);
+            border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            color: var(--text-muted);
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .upload-zone:hover .upload-icon {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .upload-zone h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+        }
+        .upload-zone p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .upload-zone .file-types {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 1.25rem;
+        }
+        .upload-zone .file-types span {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 3px 9px;
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+        }
+
+        /* ─── PREVIEW ─── */
+        #previewArea { display: none; }
+        .preview-frame {
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 1.25rem;
+            position: relative;
+            background: #000;
+        }
+        .preview-frame img {
+            width: 100%;
+            max-height: 420px;
+            object-fit: cover;
+            display: block;
+            opacity: 0.9;
+        }
+        .preview-frame .filename-tag {
+            position: absolute;
+            bottom: 10px; left: 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 4px 10px;
+            color: var(--text-secondary);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent;
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #0c0d0f;
+            border-color: var(--accent);
+        }
+        .btn-primary:hover { background: #f5ff55; }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: var(--border-dim);
+        }
+        .btn-ghost:hover {
+            border-color: var(--border-accent);
+            color: var(--text-primary);
+        }
+
+        /* ─── LOADING ─── */
+        #loadingArea {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 0;
+            gap: 1.25rem;
+        }
+        .scan-animation {
+            width: 72px; height: 72px;
+            position: relative;
+        }
+        .scan-animation .scan-ring {
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--accent);
+            animation: spin 0.9s linear infinite;
+        }
+        .scan-animation .scan-ring:nth-child(2) {
+            inset: 10px;
+            border-top-color: transparent;
+            border-left-color: rgba(232,240,64,0.4);
+            animation-duration: 1.4s;
+        }
+        .scan-animation .scan-core {
+            position: absolute;
+            inset: 20px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 1px solid rgba(232,240,64,0.3);
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-label {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+        }
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            max-width: 280px;
+        }
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .loading-step .step-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--border-dim);
+            flex-shrink: 0;
+        }
+        .loading-step.active { color: var(--accent); }
+        .loading-step.active .step-dot { background: var(--accent); }
+        .loading-step.done { color: var(--text-secondary); }
+        .loading-step.done .step-dot { background: var(--success); }
+
+        /* ─── RESULT PANEL ─── */
+        .result-empty {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .result-empty i { font-size: 28px; margin-bottom: 0.75rem; display: block; }
+
+        .result-class {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .result-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+        .result-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+        .result-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 100px;
+            letter-spacing: 0.04em;
+        }
+        .badge-danger { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,90,74,0.25); }
+        .badge-success { background: var(--success-dim); color: var(--success); border: 1px solid rgba(74,222,128,0.25); }
+
+        .confidence-bar-wrap {
+            margin-top: 0.75rem;
+        }
+        .confidence-meta {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .confidence-meta .val { color: var(--text-primary); font-weight: 700; }
+        .bar-track {
+            height: 4px;
+            background: var(--bg-raised);
+            border-radius: 100px;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 100px;
+            background: var(--accent);
+            transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+            width: 0%;
+        }
+
+        /* ─── STATS ─── */
+        .stat-grid {
+            display: grid;
+            gap: 10px;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+        }
+        .stat-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .stat-left i { width: 16px; text-align: center; }
+        .stat-count {
+            font-family: var(--font-mono);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* ─── CLASSIFICATION GRID ─── */
+        .classification-section { margin-top: 1.5rem; }
+        .class-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        @media (min-width: 768px) {
+            .class-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .class-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            transition: border-color 0.2s;
+        }
+        .class-card.top-result {
+            border-color: rgba(232,240,64,0.35);
+            background: var(--accent-dimmer);
+        }
+        .class-card-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        .class-card.top-result .class-card-name { color: var(--accent); }
+        .class-pct {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .mini-bar-track {
+            height: 3px;
+            background: var(--bg-raised);
+            border-radius: 100px;
+        }
+        .mini-bar-fill {
+            height: 100%;
+            border-radius: 100px;
+            background: var(--border-dim);
+            transition: width 0.8s ease;
+            width: 0%;
+        }
+        .class-card.top-result .mini-bar-fill { background: var(--accent); }
+
+        /* ─── HISTORY ─── */
+        .history-list { display: flex; flex-direction: column; gap: 8px; }
+        .history-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .history-empty i { font-size: 32px; margin-bottom: 0.75rem; display: block; opacity: 0.3; }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            animation: slide-in 0.3s ease;
+        }
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .history-thumb {
+            width: 44px; height: 44px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            border: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+        .history-info { flex: 1; min-width: 0; }
+        .history-class {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .history-meta {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+        .history-pct {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* ─── SYSTEM INFO ─── */
+        .info-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .info-strip { grid-template-columns: repeat(2, 1fr); }
+        }
+        .info-tile {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .info-tile-icon {
+            width: 40px; height: 40px;
+            background: var(--bg-raised);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .info-tile-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 3px;
+        }
+        .info-tile-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        footer p {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ─── SECTION LABEL ─── */
+        .section-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-subtle);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <nav class="topbar">
+        <a class="topbar-brand" href="#">
+            <div class="logo-mark"><i class="fas fa-microchip"></i></div>
+            <div>
+                <span class="brand-name">DefectScan</span>
+                <span class="brand-sub">Metal Surface Inspection System</span>
+            </div>
+        </a>
+        <div class="topbar-right">
+            <div class="status-pill">
+                <div class="dot"></div>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </nav>
+
+    <!-- PAGE -->
+    <div class="page">
+
+        <!-- HERO -->
+        <div class="hero">
+            <div class="hero-grid-bg"></div>
+            <div class="hero-tag">AI-Powered QC</div>
+            <h1>Surface <span>Defect</span><br>Detection</h1>
+            <p>Upload metal surface images for instant classification — powered by deep learning CNN trained on 1,800 labeled samples.</p>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="main-grid">
+
+            <!-- LEFT: UPLOAD + ANALYSIS -->
+            <div>
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Image Analysis</span>
+                        <span class="panel-badge" style="background:var(--info-dim);color:var(--info);border:1px solid rgba(96,180,255,0.2);">JPG · PNG · BMP</span>
+                    </div>
+                    <div class="panel-body">
+
+                        <!-- Upload Zone -->
+                        <div class="upload-zone" id="uploadArea">
+                            <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.bmp">
+                            <div class="upload-icon"><i class="fas fa-arrow-up-from-bracket"></i></div>
+                            <h3>Drop image here</h3>
+                            <p>or click to browse your files</p>
+                            <div class="file-types">
+                                <span>.JPG</span><span>.PNG</span><span>.BMP</span>
+                            </div>
+                        </div>
+
+                        <!-- Preview -->
+                        <div id="previewArea">
+                            <div class="preview-frame">
+                                <img id="imagePreview" src="" alt="Preview">
+                                <div class="filename-tag" id="filenameTag">—</div>
+                            </div>
+                            <div class="btn-row">
+                                <button class="btn btn-primary" onclick="analyzeImage()" id="analyzeBtn">
+                                    <i class="fas fa-magnifying-glass"></i> Analyze Surface
+                                </button>
+                                <button class="btn btn-ghost" onclick="clearPreview()">
+                                    <i class="fas fa-xmark"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Loading -->
+                        <div id="loadingArea" style="display:none;flex-direction:column;align-items:center;padding:3rem 0;gap:1.25rem;">
+                            <div class="scan-animation">
+                                <div class="scan-ring"></div>
+                                <div class="scan-ring"></div>
+                                <div class="scan-core"></div>
+                            </div>
+                            <div class="loading-label">SCANNING</div>
+                            <div class="loading-steps">
+                                <div class="loading-step active" id="step1"><div class="step-dot"></div>Preprocessing image</div>
+                                <div class="loading-step" id="step2"><div class="step-dot"></div>Running CNN inference</div>
+                                <div class="loading-step" id="step3"><div class="step-dot"></div>Classifying defects</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- CLASSIFICATION RESULTS -->
+                <div class="classification-section">
+                    <div class="section-label">Defect Classification</div>
+                    <div id="probabilitiesArea">
+                        <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:2rem 0;">
+                            Run an analysis to see classification scores
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: RESULT + STATS -->
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+
+                <!-- Prediction Result -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Prediction</span>
+                    </div>
+                    <div class="panel-body" id="resultArea">
+                        <div class="result-empty">
+                            <i class="fas fa-crosshairs"></i>
+                            Upload and analyze an<br>image to see results
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Stats -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Session Stats</span>
+                    </div>
+                    <div class="panel-body">
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <div class="stat-left"><i class="fas fa-images" style="color:var(--info)"></i>Analyzed</div>
+                                <div class="stat-count" id="totalScans">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-left"><i class="fas fa-triangle-exclamation" style="color:var(--danger)"></i>Defects</div>
+                                <div class="stat-count" id="defectsFound" style="color:var(--danger)">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-left"><i class="fas fa-check" style="color:var(--success)"></i>Normal</div>
+                                <div class="stat-count" id="normalSurfaces" style="color:var(--success)">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div class="panel" style="flex:1;">
+                    <div class="panel-header">
+                        <span class="panel-title">Analysis History</span>
+                    </div>
+                    <div class="panel-body" style="max-height:400px;overflow-y:auto;">
+                        <div id="historyArea">
+                            <div class="history-empty">
+                                <i class="fas fa-clock-rotate-left"></i>
+                                No analysis history
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SYSTEM INFO STRIP -->
+        <div class="info-strip">
+            <div class="info-tile">
+                <div class="info-tile-icon" style="color:var(--accent)"><i class="fas fa-brain"></i></div>
+                <div>
+                    <div class="info-tile-label">Model</div>
+                    <div class="info-tile-value">CNN Deep Learning</div>
+                </div>
+            </div>
+            <div class="info-tile">
+                <div class="info-tile-icon" style="color:var(--info)"><i class="fas fa-layer-group"></i></div>
+                <div>
+                    <div class="info-tile-label">Classes</div>
+                    <div class="info-tile-value">6 Defect Types</div>
+                </div>
+            </div>
+            <div class="info-tile">
+                <div class="info-tile-icon" style="color:var(--warn)"><i class="fas fa-database"></i></div>
+                <div>
+                    <div class="info-tile-label">Training Data</div>
+                    <div class="info-tile-value">1,800 Images</div>
+                </div>
+            </div>
+            <div class="info-tile">
+                <div class="info-tile-icon" style="color:var(--success)"><i class="fas fa-bolt"></i></div>
+                <div>
+                    <div class="info-tile-label">Processing</div>
+                    <div class="info-tile-value">Real-time</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>DefectScan · Metal Surface Inspection System</p>
+        <p>Powered by TensorFlow &amp; Deep Learning</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <script>
+        /* ── Drag & Drop ── */
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput  = document.getElementById('fileInput');
+        const previewArea = document.getElementById('previewArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const filenameTag  = document.getElementById('filenameTag');
+
+        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) showPreview(file);
+        });
+        fileInput.addEventListener('change', e => {
+            if (e.target.files[0]) showPreview(e.target.files[0]);
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                imagePreview.src = ev.target.result;
+                filenameTag.textContent = file.name;
+                uploadArea.style.display = 'none';
+                previewArea.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearPreview() {
+            uploadArea.style.display = '';
+            previewArea.style.display = 'none';
+            imagePreview.src = '';
+            fileInput.value = '';
+            document.getElementById('resultArea').innerHTML = `
+                <div class="result-empty">
+                    <i class="fas fa-crosshairs"></i>
+                    Upload and analyze an<br>image to see results
+                </div>`;
+            document.getElementById('probabilitiesArea').innerHTML = `
+                <div style="text-align:center;color:var(--text-muted);font-size:13px;padding:2rem 0;">
+                    Run an analysis to see classification scores
+                </div>`;
+        }
+
+        /* ── Loading animation steps ── */
+        function animateSteps() {
+            const steps = ['step1','step2','step3'];
+            let i = 0;
+            steps.forEach(s => {
+                const el = document.getElementById(s);
+                el.className = 'loading-step';
+            });
+            const iv = setInterval(() => {
+                if (i > 0) {
+                    const prev = document.getElementById(steps[i-1]);
+                    prev.className = 'loading-step done';
+                }
+                if (i < steps.length) {
+                    document.getElementById(steps[i]).className = 'loading-step active';
+                    i++;
+                } else {
+                    clearInterval(iv);
+                }
+            }, 600);
+        }
+
+        /* ── Analyze ── */
+        function analyzeImage() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            previewArea.style.display = 'none';
+            const loadingEl = document.getElementById('loadingArea');
+            loadingEl.style.display = 'flex';
+            animateSteps();
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/predict', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    console.log('[DEBUG] Response from /predict:', data);
+                    
+                    if (!data.success) {
+                        throw new Error(data.error || 'Prediction failed');
+                    }
+                    
+                    loadingEl.style.display = 'none';
+                    previewArea.style.display = 'block';
+                    
+                    console.log('[DEBUG] Displaying result with data:', data);
+                    displayResult(data);
+                    displayProbabilities(data.probabilities || {});
+                    addHistory(data, imagePreview.src, file.name);
+                    updateStats(data);
+                })
+                .catch(err => {
+                    console.error('[ERROR] Prediction error:', err);
+                    loadingEl.style.display = 'none';
+                    previewArea.style.display = 'block';
+                    document.getElementById('resultArea').innerHTML = `
+                        <div style="text-align:center;color:var(--danger);padding:1.5rem;">
+                            <i class="fas fa-circle-exclamation" style="font-size:24px;margin-bottom:0.75rem;display:block;"></i>
+                            Analysis failed: ${err.message || 'Please try again.'}
+                        </div>`;
+                });
+        }
+
+        function displayResult(data) {
+            const cls   = data.class || data.predicted_class || '—';
+            const conf  = data.confidence || 0;
+            const isDefect = cls.toLowerCase() !== 'normal';
+            const pct   = (conf * 100).toFixed(1);
+
+            document.getElementById('resultArea').innerHTML = `
+                <div class="result-class">
+                    <div>
+                        <div class="result-label">Classification</div>
+                        <div class="result-value">${cls}</div>
+                    </div>
+                    <span class="result-badge ${isDefect ? 'badge-danger' : 'badge-success'}">
+                        ${isDefect ? 'DEFECT' : 'NORMAL'}
+                    </span>
+                </div>
+                <div class="confidence-bar-wrap">
+                    <div class="confidence-meta">
+                        <span>Confidence</span>
+                        <span class="val">${pct}%</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" id="confBar"></div>
+                    </div>
+                </div>`;
+
+            setTimeout(() => {
+                const bar = document.getElementById('confBar');
+                if (bar) bar.style.width = pct + '%';
+            }, 50);
+        }
+
+        function displayProbabilities(probs) {
+            if (!probs || Object.keys(probs).length === 0) return;
+            const sorted = Object.entries(probs).sort((a,b) => b[1]-a[1]);
+            const topKey = sorted[0][0];
+
+            const cards = sorted.map(([cls, val]) => {
+                const pct = (val * 100).toFixed(1);
+                const isTop = cls === topKey;
+                return `
+                    <div class="class-card ${isTop ? 'top-result' : ''}">
+                        <div class="class-card-name">${cls}</div>
+                        <div class="class-pct">${pct}<span style="font-size:0.9rem;color:var(--text-muted)">%</span></div>
+                        <div class="mini-bar-track">
+                            <div class="mini-bar-fill" data-val="${pct}"></div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            document.getElementById('probabilitiesArea').innerHTML = `<div class="class-grid">${cards}</div>`;
+
+            setTimeout(() => {
+                document.querySelectorAll('.mini-bar-fill').forEach(el => {
+                    el.style.width = el.dataset.val + '%';
+                });
+            }, 50);
+        }
+
+        let totalScans = 0, defects = 0, normals = 0;
+        function updateStats(data) {
+            totalScans++;
+            const cls = (data.class || data.predicted_class || '').toLowerCase();
+            if (cls === 'normal') normals++; else defects++;
+            document.getElementById('totalScans').textContent  = totalScans;
+            document.getElementById('defectsFound').textContent = defects;
+            document.getElementById('normalSurfaces').textContent = normals;
+        }
+
+        function addHistory(data, imgSrc, filename) {
+            const cls  = data.class || data.predicted_class || '—';
+            const conf = ((data.confidence || 0)*100).toFixed(1);
+            const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            const histArea = document.getElementById('historyArea');
+
+            if (histArea.querySelector('.history-empty')) histArea.innerHTML = '<div class="history-list" id="historyList"></div>';
+            let list = document.getElementById('historyList');
+            if (!list) {
+                histArea.innerHTML = '<div class="history-list" id="historyList"></div>';
+                list = document.getElementById('historyList');
+            }
+
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <img class="history-thumb" src="${imgSrc}" alt="">
+                <div class="history-info">
+                    <div class="history-class">${cls}</div>
+                    <div class="history-meta">${filename.slice(0,24)} · ${time}</div>
+                </div>
+                <div class="history-pct">${conf}%</div>`;
+            list.prepend(item);
+        }
+    </script>
+</body>
+</html>
